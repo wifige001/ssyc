@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>强队落后实时预测原型</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  input, button { font-size: 1em; margin: 5px 0; width: 100%; padding: 8px; }
+  label { font-weight: bold; margin-top: 10px; display: block; }
+  #result { margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 8px; }
+</style>
+</head>
+<body>
+<h2>强队落后实时预测原型</h2>
+<p>输入当前比赛实时数据，获取落后翻盘概率和策略建议。</p>
+
+<form id="dataForm">
+  <label>主队得分</label>
+  <input type="number" id="homeScore" value="0" min="0" />
+
+  <label>客队得分</label>
+  <input type="number" id="awayScore" value="1" min="0" />
+
+  <label>主队进攻次数</label>
+  <input type="number" id="homeAttacks" value="64" min="0" />
+
+  <label>客队进攻次数</label>
+  <input type="number" id="awayAttacks" value="32" min="0" />
+
+  <label>主队危险进攻次数</label>
+  <input type="number" id="homeDanger" value="14" min="0" />
+
+  <label>客队危险进攻次数</label>
+  <input type="number" id="awayDanger" value="10" min="0" />
+
+  <label>主队控球率（%）</label>
+  <input type="number" id="homePossession" value="48" min="0" max="100" />
+
+  <label>客队控球率（%）</label>
+  <input type="number" id="awayPossession" value="52" min="0" max="100" />
+
+  <label>主队射正次数</label>
+  <input type="number" id="homeShotsOnTarget" value="0" min="0" />
+
+  <label>客队射正次数</label>
+  <input type="number" id="awayShotsOnTarget" value="1" min="0" />
+
+  <label>主队射偏次数</label>
+  <input type="number" id="homeShotsOffTarget" value="3" min="0" />
+
+  <label>客队射偏次数</label>
+  <input type="number" id="awayShotsOffTarget" value="1" min="0" />
+
+  <button type="button" onclick="predict()">预测翻盘概率</button>
+</form>
+
+<div id="result"></div>
+
+<script>
+function predict() {
+  const homeScore = Number(document.getElementById('homeScore').value);
+  const awayScore = Number(document.getElementById('awayScore').value);
+  const homeAttacks = Number(document.getElementById('homeAttacks').value);
+  const awayAttacks = Number(document.getElementById('awayAttacks').value);
+  const homeDanger = Number(document.getElementById('homeDanger').value);
+  const awayDanger = Number(document.getElementById('awayDanger').value);
+  const homePossession = Number(document.getElementById('homePossession').value);
+  const awayPossession = Number(document.getElementById('awayPossession').value);
+  const homeShotsOnTarget = Number(document.getElementById('homeShotsOnTarget').value);
+  const awayShotsOnTarget = Number(document.getElementById('awayShotsOnTarget').value);
+  const homeShotsOffTarget = Number(document.getElementById('homeShotsOffTarget').value);
+  const awayShotsOffTarget = Number(document.getElementById('awayShotsOffTarget').value);
+
+  if (homeScore >= awayScore) {
+    document.getElementById('result').innerHTML = '<b>主队未落后，翻盘概率无意义。</b>';
+    return;
+  }
+
+  const attackDiff = homeAttacks - awayAttacks;
+  const dangerDiff = homeDanger - awayDanger;
+  const possessionDiff = homePossession - awayPossession;
+  const shotsOnTargetDiff = homeShotsOnTarget - awayShotsOnTarget;
+  const shotsOffTargetDiff = homeShotsOffTarget - awayShotsOffTarget;
+
+  let score = attackDiff * 0.25 + dangerDiff * 0.3 + possessionDiff * 0.2 + shotsOnTargetDiff * 0.2 + shotsOffTargetDiff * 0.05;
+
+  const probability = 1 / (1 + Math.exp(-score));
+  const percent = (probability * 100).toFixed(2);
+
+  let advice = '';
+  if (probability > 0.7) advice = '强烈建议关注主队翻盘，比赛形势正在好转。';
+  else if (probability > 0.4) advice = '主队有一定反扑机会，注意比赛节奏。';
+  else advice = '主队翻盘可能性较小，谨慎下注。';
+
+  document.getElementById('result').innerHTML = `
+    <b>主队翻盘概率估算：</b> ${percent}%<br/>
+    <b>策略建议：</b> ${advice}
+  `;
+}
+</script>
+
+</body>
+</html>
